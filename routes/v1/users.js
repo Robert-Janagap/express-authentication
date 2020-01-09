@@ -11,8 +11,6 @@ const config = require("config");
  * User sign up
  * User sign in
  * User update password
- * User add profile
- * User update profile
  * */
 
 router.post(
@@ -34,7 +32,8 @@ router.post(
     if (!errors.isEmpty())
       return res.status(400).json({
         errors: errors.array(),
-        message: "Failed sign up."
+        message: "Failed sign up.",
+        success: false
       });
     let { username, email, password } = req.body;
 
@@ -50,7 +49,8 @@ router.post(
           errors: 1,
           message: `${
             checkEmail ? checkEmail.email : checkUsername.username
-          } already exist`
+          } already exist`,
+          success: false
         });
 
       let user = new User(req.body);
@@ -76,14 +76,84 @@ router.post(
             errors: errors.array(),
             message: "Successfully sign up.",
             user,
-            token
+            token,
+            success: true
           });
         }
       );
     } catch (errors) {
       res.status(400).json({
         errors,
-        message: "Request failed"
+        message: "Request failed",
+        success: false
+      });
+    }
+  }
+);
+
+router.post(
+  "/sign-in",
+  [
+    check("email", "Please include a valid email")
+      .isEmail()
+      .normalizeEmail(),
+    check("password", "Password is required").exists()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({
+        errors: errors.array(),
+        message: "Failed sign in",
+        success: false
+      });
+
+    const { email, password } = req.body;
+    let user = await User.findOne({ email }).lean();
+
+    try {
+      if (!user)
+        return res.status(401).json({
+          errors: 1,
+          message: `${email} doesn't exist`,
+          success: false
+        });
+
+      const passwordMatch = await bcrypt.compare(password, user.password);
+
+      if (!passwordMatch)
+        return res.status(401).json({
+          errors: 1,
+          message: `Invalid password`,
+          success: false
+        });
+
+      const payload = {
+        user: {
+          id: user.id
+        }
+      };
+
+      jwt.sign(
+        payload,
+        config.get("jwtSecret"),
+        { expiresIn: 360000 },
+        (err, token) => {
+          if (err) throw err;
+          res.status(200).json({
+            errors: errors.array(),
+            message: "Successfully sign in.",
+            user,
+            token,
+            success: true
+          });
+        }
+      );
+    } catch (errors) {
+      res.status(400).json({
+        errors,
+        message: "Failed sign in",
+        success: false
       });
     }
   }

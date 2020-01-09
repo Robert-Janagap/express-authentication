@@ -22,7 +22,7 @@ let userToken = null;
  * User update profile
  * */
 
-describe("User routes testing", () => {
+describe("Initiating testing...", () => {
   before(done => {
     User.find()
       .deleteMany()
@@ -38,7 +38,7 @@ describe("User routes testing", () => {
     it("Should successfully sign up", done => {
       const body = {
         username: "test",
-        email: "test@gmail.com",
+        email: "test@test.com",
         password: "password"
       };
 
@@ -49,6 +49,7 @@ describe("User routes testing", () => {
         .then(res => {
           expect(res).to.have.status(201);
           expect(res.body.message).to.be.equal("Successfully sign up.");
+          expect(res.body.success).to.be.equal(true);
           expect(res.body.user).to.be.an("object");
           // expect no errors
           expect(res.body.errors).to.be.empty;
@@ -67,16 +68,17 @@ describe("User routes testing", () => {
         .catch(error => console.log(`Error: ${error}`));
     });
 
-    it("Should fail sign up", done => {
+    it("Should fail sign up, Bad request", done => {
       const body = {};
 
       request(server)
-        .post(`${url}`)
+        .post(url)
         .set("Accept", "application/json")
         .send(body)
         .then(res => {
           expect(res).to.have.status(400);
           expect(res.body.message).to.be.equal("Failed sign up.");
+          expect(res.body.success).to.be.equal(false);
           expect(res.body.errors).to.not.equal(0);
 
           done();
@@ -84,18 +86,19 @@ describe("User routes testing", () => {
         .catch(error => console.log(`Error: ${error}`));
     });
 
-    it("Should fail sign up, conflict resource", done => {
+    it("Should fail sign up, Conflict resource", done => {
       const body = {
         username: "test",
-        email: "test@gmail.com",
+        email: "test@test.com",
         password: "password"
       };
       request(server)
-        .post(`${url}`)
+        .post(url)
         .set("Accept", "application/json")
         .send(body)
         .then(res => {
           expect(res).to.have.status(409);
+          expect(res.body.success).to.be.equal(false);
           expect(res.body.errors).to.not.equal(0);
           done();
         })
@@ -104,30 +107,68 @@ describe("User routes testing", () => {
   });
 
   describe("User Sign In", () => {
-    it("Should return 200", done => {
+    const url = `${root}/sign-in`;
+
+    it("Should sign in completed", done => {
       const body = {
-        username: "test",
+        email: "test@test.com",
         password: "password"
       };
 
       request(server)
-        .post(`${root}/sign-in`)
+        .post(url)
         .set("Accept", "application/json")
         .send(body)
         .then(res => {
           expect(res).to.have.status(200);
-          expect(res.body.message).to.be.equal("Sign in completed");
+          expect(res.body.message).to.be.equal("Successfully sign in.");
+          expect(res.body.success).to.be.equal(true);
           expect(res.body.user).to.be.an("object");
           // expect token exist
           expect(res.body.token).to.exist;
           // expect no errors
-          expect(res.body.errors.length).to.be.empty;
-
+          expect(res.body.errors).to.be.empty;
           // save token
           userToken = res.body.token;
           done();
         })
         .catch(error => console.log(error.message));
+    });
+
+    it("Should sign in fail, Bad request", done => {
+      const body = {};
+
+      request(server)
+        .post(url)
+        .set("Accept", "application/json")
+        .send(body)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.be.equal("Failed sign in");
+          expect(res.body.success).to.be.equal(false);
+          expect(res.body.errors).to.not.equal(0);
+          done();
+        })
+        .catch(error => console.log(error));
+    });
+
+    it("Should sign in fail, Invalid credentials", done => {
+      const body = {
+        email: "wrongEmail@test.com",
+        password: "wrongPassword"
+      };
+
+      request(server)
+        .post(url)
+        .set("Accept", "application/json")
+        .send(body)
+        .then(res => {
+          expect(res).to.have.status(401);
+          expect(res.body.errors).to.not.equal(0);
+          expect(res.body.success).to.be.equal(false);
+          done();
+        })
+        .catch(error => console.log(error));
     });
   });
 
