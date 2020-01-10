@@ -173,26 +173,28 @@ describe("Initiating testing...", () => {
   });
 
   describe("User update password", () => {
-    it("Should return 200", done => {
+    it("Should successfully changed password", done => {
+      const token = userToken;
       const body = {
-        username: "test",
-        newPassword: "password"
+        password: "password2"
       };
+
       request(server)
         .post(`${root}/change-password`)
         .set("Accept", "application/json")
-        .set("Authorization", userToken)
+        .set("Authorization", token)
         .send(body)
         .then(res => {
-          expect(res.body).to.have.status(200);
+          expect(res).to.have.status(200);
           expect(res.body.message).to.be.equal("Successfully changed password");
-          expect(res.body.user).to.be.an("object");
+          expect(res.body.success).to.be.equal(true);
           // expect no errors
           expect(res.body.errors).to.be.empty;
           // expect password has been hashed
-          expect(res.body.user.password).not.to.be.eql(body.newPassword);
+          expect(res.body.user.password).not.to.be.eql(body.password);
+          done();
         })
-        .catch(error => console.log(error.message));
+        .catch(error => console.log(error));
     });
   });
 

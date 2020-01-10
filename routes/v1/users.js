@@ -5,13 +5,7 @@ const { check, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("config");
-
-/**
- * Todo
- * User sign up
- * User sign in
- * User update password
- * */
+const auth = require("../../middleware/auth");
 
 router.post(
   "/sign-up",
@@ -130,7 +124,7 @@ router.post(
 
       const payload = {
         user: {
-          id: user.id
+          id: user._id
         }
       };
 
@@ -158,5 +152,38 @@ router.post(
     }
   }
 );
+
+router.post("/change-password", auth, async (req, res) => {
+  const { password } = req.body;
+  const { id } = req.user;
+  let user = await User.findById(id).select("password");
+
+  try {
+    if (!user)
+      return res.status(401).json({
+        errors: 1,
+        message: `User ID doesn't exist`,
+        success: false
+      });
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+
+    await user.save();
+
+    res.status(200).json({
+      errors: [],
+      user,
+      message: "Successfully changed password",
+      success: true
+    });
+  } catch (errors) {
+    res.status(400).json({
+      errors,
+      message: "Failed change password",
+      success: false
+    });
+  }
+});
 
 module.exports = router;
