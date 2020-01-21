@@ -6,7 +6,7 @@
   "scripts": {
     "server": "cross-env NODE_ENV=production node server.js",
     "dev": "cross-env DEBUG=server:debug NODE_ENV=development nodemon server.js",
-    "test": "cross-env DEBUG=server:debug NODE_ENV=test mocha \"test/**/*.test.js\""
+    "test": "cross-env DEBUG=server:debug NODE_ENV=test mocha ./test/"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

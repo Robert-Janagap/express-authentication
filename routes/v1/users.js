@@ -7,6 +7,12 @@ const jwt = require("jsonwebtoken");
 const config = require("config");
 const auth = require("../../middleware/auth");
 
+/**
+ * User sign up
+ * User sign in
+ * User update password
+ * */
+
 router.post(
   "/sign-up",
   [
@@ -56,7 +62,9 @@ router.post(
       await user.save();
       const payload = {
         user: {
-          id: user.id
+          id: user.id,
+          email,
+          username
         }
       };
       // generate token
@@ -172,7 +180,7 @@ router.post("/change-password", auth, async (req, res) => {
     await user.save();
 
     res.status(200).json({
-      errors: [],
+      errors: 0,
       user,
       message: "Successfully changed password",
       success: true

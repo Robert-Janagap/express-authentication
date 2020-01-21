@@ -8,26 +8,30 @@ const expect = chai.expect;
 
 // models
 const User = require("../models/User");
+const Profile = require("../models/Profile");
 
 // global variable
 const root = "/api/v1/users";
 let userToken = null;
 
 /**
- * Todo
  * User sign up
  * User sign in
  * User update password
- * User add profile
- * User update profile
  * */
 
-describe("Initiating testing...", () => {
+describe("Initiating user testing...", () => {
   before(done => {
     User.find()
       .deleteMany()
       .then(res => {
-        console.log("cleaning database...");
+        console.log("cleaning users container...");
+      })
+      .catch(error => console.log(error.message));
+    Profile.find()
+      .deleteMany()
+      .then(res => {
+        console.log("cleaning profile container...");
         done();
       })
       .catch(error => console.log(error.message));
@@ -130,6 +134,8 @@ describe("Initiating testing...", () => {
           expect(res.body.errors).to.be.empty;
           // save token
           userToken = res.body.token;
+          // export token
+          module.exports.token = userToken;
           done();
         })
         .catch(error => console.log(error.message));
@@ -189,7 +195,7 @@ describe("Initiating testing...", () => {
           expect(res.body.message).to.be.equal("Successfully changed password");
           expect(res.body.success).to.be.equal(true);
           // expect no errors
-          expect(res.body.errors).to.be.empty;
+          expect(res.body.errors).to.be.equal(0);
           // expect password has been hashed
           expect(res.body.user.password).not.to.be.eql(body.password);
           done();
@@ -198,30 +204,8 @@ describe("Initiating testing...", () => {
     });
   });
 
-  describe("User add profile", () => {
-    it("Should return 200", done => {
-      const body = {
-        username: "test",
-        newPassword: "password"
-      };
-      request(server)
-        .post(`${root}/change-password`)
-        .set("Accept", "application/json")
-        .set("Authorization", userToken)
-        .send(body)
-        .then(res => {
-          expect(res.body).to.have.status(200);
-          expect(res.body.message).to.be.equal("Successfully add profile");
-          expect(res.body.user).to.be.an("object");
-          // expect no errors
-          expect(res.body.errors).to.be.empty;
-        })
-        .catch(error => console.log(error.message));
-    });
-  });
-
-  after(_ => {
-    console.log("All test completed, stoping server...");
-    process.exit();
-  });
+  // after(_ => {
+  //   console.log("All user test completed");
+  //   // process.exit();
+  // });
 });

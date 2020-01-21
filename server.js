@@ -28,6 +28,7 @@ app.use(morgan("combined", { stream: accessLogStream }));
 
 // routes
 app.use("/api/v1/users", require("./routes/v1/users"));
+app.use("/api/v1/profile", require("./routes/v1/profile"));
 
 const PORT = process.env.PORT || config.get("PORT");
 
